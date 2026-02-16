@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { useRef, useCallback } from 'react';
 import type { MoonData } from '@/hooks/useMoonPhase';
 
 interface Props {
@@ -8,6 +9,31 @@ interface Props {
 const MoonVisualization = ({ moonData }: Props) => {
   const illuminationFraction = moonData.illumination / 100;
   const phase = moonData.phase / 100; // 0-1
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const rotateX = useSpring(useTransform(mouseY, [-1, 1], [12, -12]), { stiffness: 150, damping: 20 });
+  const rotateY = useSpring(useTransform(mouseX, [-1, 1], [-12, 12]), { stiffness: 150, damping: 20 });
+  const highlightX = useSpring(useTransform(mouseX, [-1, 1], [35, 55]), { stiffness: 150, damping: 20 });
+  const highlightY = useSpring(useTransform(mouseY, [-1, 1], [30, 50]), { stiffness: 150, damping: 20 });
+  const glowX = useSpring(useTransform(mouseX, [-1, 1], [-8, 8]), { stiffness: 100, damping: 25 });
+  const glowY = useSpring(useTransform(mouseY, [-1, 1], [-8, 8]), { stiffness: 100, damping: 25 });
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    mouseX.set(x);
+    mouseY.set(y);
+  }, [mouseX, mouseY]);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseX.set(0);
+    mouseY.set(0);
+  }, [mouseX, mouseY]);
 
   return (
     <motion.div
@@ -17,18 +43,28 @@ const MoonVisualization = ({ moonData }: Props) => {
       className="card-glass rounded-3xl p-8 flex flex-col items-center"
     >
       {/* Moon */}
-      <div className="relative mb-8 animate-float">
-        {/* Outer atmospheric glow */}
-        <div
+      <motion.div
+        ref={containerRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{ rotateX, rotateY, perspective: 800, transformStyle: 'preserve-3d' }}
+        className="relative mb-8 animate-float cursor-grab active:cursor-grabbing"
+      >
+        {/* Outer atmospheric glow - follows mouse */}
+        <motion.div
           className="absolute -inset-12 rounded-full pointer-events-none"
           style={{
+            x: glowX,
+            y: glowY,
             background: `radial-gradient(circle, hsl(45 30% 90% / 0.06) 30%, hsl(220 60% 75% / 0.04) 50%, transparent 70%)`,
           }}
         />
         {/* Secondary glow ring */}
-        <div
+        <motion.div
           className="absolute -inset-6 rounded-full pointer-events-none"
           style={{
+            x: useTransform(glowX, v => v * 0.5),
+            y: useTransform(glowY, v => v * 0.5),
             background: `radial-gradient(circle, hsl(40 15% 85% / 0.12) 40%, transparent 70%)`,
           }}
         />
@@ -220,14 +256,16 @@ const MoonVisualization = ({ moonData }: Props) => {
           />
         </div>
 
-        {/* Ambient glow */}
-        <div
+        {/* Ambient glow - follows mouse */}
+        <motion.div
           className="absolute -inset-4 rounded-full pointer-events-none"
           style={{
+            x: glowX,
+            y: glowY,
             boxShadow: `0 0 ${40 + illuminationFraction * 60}px hsl(40 15% 85% / ${0.08 + illuminationFraction * 0.15}), 0 0 ${80 + illuminationFraction * 100}px hsl(220 50% 75% / ${0.04 + illuminationFraction * 0.08})`,
           }}
         />
-      </div>
+      </motion.div>
 
       {/* Phase info */}
       <motion.div
