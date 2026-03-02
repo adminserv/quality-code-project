@@ -48,7 +48,15 @@ const MoonVisualization = ({ moonData }: Props) => {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ rotateX, rotateY, perspective: 800, transformStyle: 'preserve-3d' }}
-        className="relative mb-8 animate-float cursor-grab active:cursor-grabbing"
+        className="relative mb-8 cursor-grab active:cursor-grabbing"
+        animate={{
+          y: [0, -8, 0],
+          rotateZ: [0, 1.5, 0, -1.5, 0],
+        }}
+        transition={{
+          y: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+          rotateZ: { duration: 12, repeat: Infinity, ease: 'easeInOut' },
+        }}
       >
         {/* Outer atmospheric glow - follows mouse */}
         <motion.div
