@@ -7,7 +7,7 @@ import MoonVisualization from '@/components/MoonVisualization';
 import MoonStats from '@/components/MoonStats';
 import LunarEvents from '@/components/LunarEvents';
 import MoonFacts from '@/components/MoonFacts';
-
+import LunarCalendar from '@/components/LunarCalendar';
 const Index = () => {
   const { currentTime, moonData } = useMoonPhase();
   const [showAlert, setShowAlert] = useState(false);
@@ -73,6 +73,11 @@ const Index = () => {
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
           <MoonVisualization moonData={moonData} />
           <MoonStats moonData={moonData} />
+        </div>
+
+        {/* Calendar */}
+        <div className="mb-6">
+          <LunarCalendar />
         </div>
 
         {/* Events */}

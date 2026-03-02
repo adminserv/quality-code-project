@@ -21,7 +21,7 @@ export interface MoonData {
 const LUNAR_MONTH = 29.53058868;
 const KNOWN_NEW_MOON = new Date('2000-01-06T18:14:00Z');
 
-function calculateMoonPhase(date: Date): MoonData {
+export function calculateMoonPhase(date: Date): MoonData {
   const diff = date.getTime() - KNOWN_NEW_MOON.getTime();
   const days = diff / (1000 * 60 * 60 * 24);
   const phase = ((days % LUNAR_MONTH) + LUNAR_MONTH) % LUNAR_MONTH / LUNAR_MONTH;
