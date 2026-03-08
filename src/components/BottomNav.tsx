@@ -1,4 +1,4 @@
-import { Moon, Leaf, Heart, BookOpen } from 'lucide-react';
+import { Moon, Leaf, Heart, BookOpen, Pencil } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -6,6 +6,7 @@ const tabs = [
   { to: '/', icon: Moon, label: 'Luna', exact: true },
   { to: '/jardineria', icon: Leaf, label: 'Jardín' },
   { to: '/bienestar', icon: Heart, label: 'Bienestar' },
+  { to: '/diario', icon: Pencil, label: 'Diario' },
   { to: '/guias', icon: BookOpen, label: 'Guías' },
 ];
 
@@ -19,7 +20,7 @@ const BottomNav = () => (
           end={exact}
           className={({ isActive }) =>
             cn(
-              'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[60px]',
+              'flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-colors min-w-[50px]',
               isActive
                 ? 'text-primary'
                 : 'text-muted-foreground hover:text-foreground'
