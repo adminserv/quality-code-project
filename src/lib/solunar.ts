@@ -55,36 +55,36 @@ export function calculateSolunar(date: Date, moonPhase: number): SolunarData {
   const minor2Start = setHour - 0.5;
   const minor2End = setHour + 0.5;
 
-  const periods: SolunarPeriod[] = [
+  const periods: SolunarPeriod[] = ([
     {
-      label: 'Período Mayor',
+      label: 'Período Mayor' as const,
       start: formatTime(major1Start),
       end: formatTime(major1End),
-      quality: 'Excelente',
-      type: 'major',
+      quality: 'Excelente' as const,
+      type: 'major' as const,
     },
     {
-      label: 'Período Mayor',
+      label: 'Período Mayor' as const,
       start: formatTime(major2Start),
       end: formatTime(major2End),
-      quality: 'Excelente',
-      type: 'major',
+      quality: 'Excelente' as const,
+      type: 'major' as const,
     },
     {
-      label: 'Período Menor',
+      label: 'Período Menor' as const,
       start: formatTime(minor1Start),
       end: formatTime(minor1End),
-      quality: 'Bueno',
-      type: 'minor',
+      quality: 'Bueno' as const,
+      type: 'minor' as const,
     },
     {
-      label: 'Período Menor',
+      label: 'Período Menor' as const,
       start: formatTime(minor2Start),
       end: formatTime(minor2End),
-      quality: 'Bueno',
-      type: 'minor',
+      quality: 'Bueno' as const,
+      type: 'minor' as const,
     },
-  ].sort((a, b) => a.start.localeCompare(b.start));
+  ] satisfies SolunarPeriod[]).sort((a, b) => a.start.localeCompare(b.start));
 
   // Rating based on phase proximity to new/full moon (strongest tidal pull)
   const phaseNormalized = moonPhase / 100;
