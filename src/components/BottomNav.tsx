@@ -1,4 +1,4 @@
-import { Moon, Leaf, Heart, BookOpen, Pencil } from 'lucide-react';
+import { Moon, Leaf, Heart, BookOpen, Pencil, Bell } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -7,7 +7,7 @@ const tabs = [
   { to: '/jardineria', icon: Leaf, label: 'Jardín' },
   { to: '/bienestar', icon: Heart, label: 'Bienestar' },
   { to: '/diario', icon: Pencil, label: 'Diario' },
-  { to: '/guias', icon: BookOpen, label: 'Guías' },
+  { to: '/notificaciones', icon: Bell, label: 'Alertas' },
 ];
 
 const BottomNav = () => (
