@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { Heart, Brain, Sparkles, Moon, Flame, Wind } from 'lucide-react';
+import { Heart, Brain, Sparkles, Moon, Flame, Wind, Dumbbell, BedDouble } from 'lucide-react';
 import type { MoonData } from '@/hooks/useMoonPhase';
+import { getZodiacHealth } from '@/lib/zodiacHealth';
 
 interface Props {
   moonData: MoonData;
@@ -37,6 +38,7 @@ const WellnessGuide = ({ moonData }: Props) => {
   const currentRitual = rituals.find(r => r.phase === moonData.phaseName) || rituals[0];
   const energyLevel = moonData.illumination > 70 ? 'Alta' : moonData.illumination > 30 ? 'Media' : 'Baja';
   const energyColor = moonData.illumination > 70 ? 'text-lunar-gold' : moonData.illumination > 30 ? 'text-primary' : 'text-cosmic-cyan';
+  const zodiacHealth = getZodiacHealth(moonData.zodiacSign);
 
   return (
     <motion.div
@@ -85,6 +87,50 @@ const WellnessGuide = ({ moonData }: Props) => {
         </p>
       </div>
 
+      {/* Zodiac body map */}
+      <div className="card-glass rounded-3xl p-6">
+        <h3 className="font-display font-bold text-foreground mb-4">
+          {zodiacHealth.emoji} Luna en {zodiacHealth.sign} — Cuerpo
+        </h3>
+        <div className="space-y-4">
+          <div className="bg-muted/30 rounded-xl p-4 border border-border/30">
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-1">Zona del cuerpo</p>
+            <p className="text-sm text-foreground font-semibold">{zodiacHealth.body}</p>
+          </div>
+          <p className="text-sm text-foreground/80 leading-relaxed">{zodiacHealth.care}</p>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-muted/30 rounded-xl p-3 border border-border/30">
+              <div className="flex items-center gap-2 mb-1">
+                <Dumbbell className="w-3.5 h-3.5 text-lunar-gold" />
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Ejercicio</p>
+              </div>
+              <p className="text-xs text-foreground/80">{zodiacHealth.exercise}</p>
+            </div>
+            <div className="bg-muted/30 rounded-xl p-3 border border-border/30">
+              <div className="flex items-center gap-2 mb-1">
+                <BedDouble className="w-3.5 h-3.5 text-cosmic-cyan" />
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Sueño</p>
+              </div>
+              <p className="text-xs text-foreground/80">{zodiacHealth.sleep}</p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <span className="px-2.5 py-1 rounded-lg bg-muted/40 text-[11px] font-medium text-muted-foreground">
+              Elemento: {zodiacHealth.element}
+            </span>
+            <span className={`px-2.5 py-1 rounded-lg text-[11px] font-medium ${
+              zodiacHealth.fertility === 'Alta' ? 'bg-green-500/15 text-green-400' :
+              zodiacHealth.fertility === 'Media' ? 'bg-lunar-gold/15 text-lunar-gold' :
+              'bg-muted/40 text-muted-foreground'
+            }`}>
+              Fertilidad: {zodiacHealth.fertility}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Ritual */}
       <div className="card-glass rounded-3xl p-6">
         <div className="flex items-center gap-3 mb-4">
@@ -101,17 +147,6 @@ const WellnessGuide = ({ moonData }: Props) => {
             </li>
           ))}
         </ol>
-      </div>
-
-      {/* Zodiac wellness */}
-      <div className="card-glass rounded-3xl p-6">
-        <h3 className="font-display font-bold text-foreground mb-2">
-          {moonData.zodiacEmoji} Luna en {moonData.zodiacSign}
-        </h3>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Cada signo zodiacal rige una parte del cuerpo. Presta especial atención al autocuidado 
-          de la zona asociada a {moonData.zodiacSign} durante esta fase lunar.
-        </p>
       </div>
     </motion.div>
   );

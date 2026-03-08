@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Leaf, Droplets, Scissors, Sprout, Sun, CloudRain } from 'lucide-react';
 import type { MoonData } from '@/hooks/useMoonPhase';
 import { PremiumBadge } from './PremiumBadge';
+import { getZodiacHealth } from '@/lib/zodiacHealth';
 
 interface Props {
   moonData: MoonData;
@@ -16,7 +17,7 @@ const activities = [
   { name: 'Regar abundante', phases: [3, 4], icon: CloudRain, color: 'text-primary' },
 ];
 
-function getPhaseIndex(illumination: number, phase: number): number {
+function getPhaseIndex(phase: number): number {
   if (phase < 3.3 || phase > 96.7) return 0;
   if (phase < 21.6) return 1;
   if (phase < 28.3) return 2;
@@ -28,7 +29,8 @@ function getPhaseIndex(illumination: number, phase: number): number {
 }
 
 const GardeningGuide = ({ moonData }: Props) => {
-  const currentPhaseIdx = getPhaseIndex(moonData.illumination, moonData.phase);
+  const currentPhaseIdx = getPhaseIndex(moonData.phase);
+  const zodiacHealth = getZodiacHealth(moonData.zodiacSign);
 
   return (
     <motion.div
@@ -81,14 +83,30 @@ const GardeningGuide = ({ moonData }: Props) => {
         </div>
       </div>
 
-      {/* Zodiac influence */}
+      {/* Zodiac influence with fertility */}
       <div className="card-glass rounded-3xl p-6">
-        <h3 className="font-display font-bold text-foreground mb-2">
+        <h3 className="font-display font-bold text-foreground mb-3">
           Luna en {moonData.zodiacSign} {moonData.zodiacEmoji}
         </h3>
+        <div className="flex gap-2 mb-3">
+          <span className="px-2.5 py-1 rounded-lg bg-muted/40 text-[11px] font-medium text-muted-foreground">
+            Elemento: {zodiacHealth.element}
+          </span>
+          <span className={`px-2.5 py-1 rounded-lg text-[11px] font-medium ${
+            zodiacHealth.fertility === 'Alta' ? 'bg-green-500/15 text-green-400' :
+            zodiacHealth.fertility === 'Media' ? 'bg-lunar-gold/15 text-lunar-gold' :
+            'bg-muted/40 text-muted-foreground'
+          }`}>
+            Fertilidad: {zodiacHealth.fertility}
+          </span>
+        </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          La posición zodiacal de la Luna influye en el tipo de cultivo. Los signos de agua (Cáncer, Escorpio, Piscis) 
-          son los más fértiles para sembrar, mientras que los signos de fuego (Aries, Leo, Sagitario) son ideales para la cosecha.
+          {zodiacHealth.fertility === 'Alta'
+            ? `${moonData.zodiacSign} es un signo de ${zodiacHealth.element.toLowerCase()} muy fértil. Excelente momento para sembrar todo tipo de cultivos, especialmente los de hoja y fruto.`
+            : zodiacHealth.fertility === 'Media'
+              ? `${moonData.zodiacSign} tiene fertilidad moderada. Buen momento para trasplantar y labores de mantenimiento del huerto.`
+              : `${moonData.zodiacSign} es un signo poco fértil. Aprovecha para cosechar, podar y preparar la tierra. Evita sembrar.`
+          }
         </p>
       </div>
     </motion.div>

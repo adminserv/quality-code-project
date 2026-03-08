@@ -1,6 +1,7 @@
-import { Moon, Sparkles } from 'lucide-react';
+import { Moon, Sparkles, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useMoonPhase } from '@/hooks/useMoonPhase';
 import StarField from '@/components/StarField';
 import MoonVisualization from '@/components/MoonVisualization';
@@ -8,10 +9,16 @@ import MoonStats from '@/components/MoonStats';
 import LunarEvents from '@/components/LunarEvents';
 import MoonFacts from '@/components/MoonFacts';
 import LunarCalendar from '@/components/LunarCalendar';
+import ShareButton from '@/components/ShareButton';
 
 const Index = () => {
   const { currentTime, moonData } = useMoonPhase();
   const [showAlert, setShowAlert] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  useEffect(() => {
+    setIsStandalone(window.matchMedia('(display-mode: standalone)').matches);
+  }, []);
 
   useEffect(() => {
     if (moonData.isSpecialEvent && !showAlert) {
@@ -57,6 +64,7 @@ const Index = () => {
             <h1 className="text-3xl sm:text-5xl font-bold font-display text-glow">
               Luna Viva
             </h1>
+            <ShareButton moonData={moonData} />
           </div>
           <p className="text-muted-foreground text-sm sm:text-base">
             {currentTime.toLocaleDateString('es-ES', {
@@ -68,6 +76,15 @@ const Index = () => {
             {' · '}
             {currentTime.toLocaleTimeString('es-ES')}
           </p>
+          {!isStandalone && (
+            <Link
+              to="/instalar"
+              className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Instalar App
+            </Link>
+          )}
         </motion.header>
 
         {/* Main grid */}
@@ -89,6 +106,27 @@ const Index = () => {
         {/* Facts */}
         <MoonFacts moonData={moonData} />
       </div>
+
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Luna Viva",
+            "description": "Sigue las fases lunares en tiempo real con guías de jardinería, bienestar, pesca y fotografía nocturna.",
+            "applicationCategory": "LifestyleApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "EUR",
+            },
+            "inLanguage": "es",
+          }),
+        }}
+      />
     </div>
   );
 };

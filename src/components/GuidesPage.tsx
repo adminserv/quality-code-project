@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Fish, Camera, Anchor, Compass } from 'lucide-react';
 import { useMoonPhase } from '@/hooks/useMoonPhase';
 import { PremiumBadge, PremiumGate } from './PremiumBadge';
+import { usePremium } from '@/contexts/PremiumContext';
+import { calculateSolunar } from '@/lib/solunar';
 import { cn } from '@/lib/utils';
 
 const tabs = [
@@ -11,8 +13,9 @@ const tabs = [
 ];
 
 const FishingContent = ({ moonData }: { moonData: ReturnType<typeof useMoonPhase>['moonData'] }) => {
-  const stars = Array.from({ length: 5 }, (_, i) => i < moonData.fishingRating);
-  
+  const solunar = calculateSolunar(new Date(), moonData.phase);
+  const stars = Array.from({ length: 5 }, (_, i) => i < solunar.rating);
+
   return (
     <div className="space-y-6">
       <div className="card-glass rounded-3xl p-6">
@@ -21,7 +24,7 @@ const FishingContent = ({ moonData }: { moonData: ReturnType<typeof useMoonPhase
             <Anchor className="w-6 h-6 text-cosmic-cyan" />
           </div>
           <div>
-            <h3 className="font-display font-bold text-foreground">Índice de Pesca</h3>
+            <h3 className="font-display font-bold text-foreground">Índice Solunar</h3>
             <div className="flex gap-1 mt-1">
               {stars.map((filled, i) => (
                 <span key={i} className={`text-sm ${filled ? 'text-lunar-gold' : 'text-muted-foreground/30'}`}>★</span>
@@ -30,31 +33,39 @@ const FishingContent = ({ moonData }: { moonData: ReturnType<typeof useMoonPhase
           </div>
         </div>
         <p className="text-foreground/90 leading-relaxed">
-          {moonData.fishingRating >= 4
-            ? 'Excelente actividad lunar para pescar. Los peces están más activos durante esta fase.'
-            : moonData.fishingRating >= 3
-              ? 'Condiciones moderadas. La pesca puede ser productiva en horarios de transición lunar.'
+          {solunar.rating >= 4
+            ? 'Excelente actividad solunar. Peces y fauna muy activos durante los períodos marcados.'
+            : solunar.rating >= 3
+              ? 'Condiciones moderadas. La pesca puede ser productiva en los períodos mayores.'
               : 'Actividad baja. Los peces tienden a estar menos activos. Mejor esperar a una fase más favorable.'
           }
         </p>
       </div>
 
       <div className="card-glass rounded-3xl p-6">
-        <h3 className="font-display font-bold text-foreground mb-4">Tabla Solunar</h3>
+        <h3 className="font-display font-bold text-foreground mb-4">Tabla Solunar — Hoy</h3>
         <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: 'Período Mayor AM', time: '05:30 - 07:30', quality: 'Excelente' },
-            { label: 'Período Mayor PM', time: '17:45 - 19:45', quality: 'Excelente' },
-            { label: 'Período Menor AM', time: '11:15 - 12:15', quality: 'Bueno' },
-            { label: 'Período Menor PM', time: '23:30 - 00:30', quality: 'Bueno' },
-          ].map(period => (
-            <div key={period.label} className="bg-muted/30 rounded-xl p-3 border border-border/30">
+          {solunar.periods.map((period, i) => (
+            <div key={i} className={cn(
+              "rounded-xl p-3 border",
+              period.type === 'major'
+                ? "bg-cosmic-cyan/10 border-cosmic-cyan/30"
+                : "bg-muted/30 border-border/30"
+            )}>
               <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{period.label}</p>
-              <p className="font-display font-bold text-foreground text-sm mt-1">{period.time}</p>
-              <p className="text-[11px] text-cosmic-cyan mt-0.5">{period.quality}</p>
+              <p className="font-display font-bold text-foreground text-sm mt-1">
+                {period.start} – {period.end}
+              </p>
+              <p className={cn(
+                "text-[11px] mt-0.5 font-medium",
+                period.type === 'major' ? 'text-cosmic-cyan' : 'text-primary'
+              )}>{period.quality}</p>
             </div>
           ))}
         </div>
+        <p className="text-[11px] text-muted-foreground mt-3">
+          Calculado según el tránsito lunar del día. Los períodos mayores coinciden con la Luna sobre y bajo el horizonte.
+        </p>
       </div>
 
       <div className="card-glass rounded-3xl p-6">
@@ -111,17 +122,17 @@ const PhotoContent = ({ moonData }: { moonData: ReturnType<typeof useMoonPhase>[
           <span className="text-sm text-muted-foreground">Oscuridad del cielo</span>
           <div className="flex items-center gap-2">
             <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full bg-primary"
-                style={{ width: `${100 - moonData.illumination}%` }}
-              />
+              <div className="h-full rounded-full bg-primary" style={{ width: `${100 - moonData.illumination}%` }} />
             </div>
             <span className="text-xs font-bold text-primary">{(100 - moonData.illumination).toFixed(0)}%</span>
           </div>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Visibilidad estelar</span>
-          <span className={`text-xs font-bold ${moonData.illumination < 30 ? 'text-green-400' : moonData.illumination < 60 ? 'text-lunar-gold' : 'text-nebula-rose'}`}>
+          <span className={cn(
+            "text-xs font-bold",
+            moonData.illumination < 30 ? 'text-green-400' : moonData.illumination < 60 ? 'text-lunar-gold' : 'text-nebula-rose'
+          )}>
             {moonData.illumination < 30 ? 'Excelente' : moonData.illumination < 60 ? 'Moderada' : 'Limitada'}
           </span>
         </div>
@@ -132,7 +143,26 @@ const PhotoContent = ({ moonData }: { moonData: ReturnType<typeof useMoonPhase>[
 
 const GuidesPage = () => {
   const { moonData } = useMoonPhase();
+  const { isPremium } = usePremium();
   const [activeTab, setActiveTab] = useState('fishing');
+
+  const content = (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.2 }}
+      >
+        {activeTab === 'fishing' ? (
+          <FishingContent moonData={moonData} />
+        ) : (
+          <PhotoContent moonData={moonData} />
+        )}
+      </motion.div>
+    </AnimatePresence>
+  );
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
@@ -141,10 +171,9 @@ const GuidesPage = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-2xl font-bold font-display text-glow text-center mb-6"
       >
-        Guías Especializadas
+        📖 Guías Especializadas
       </motion.h1>
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-6 justify-center">
         {tabs.map(tab => (
           <button
@@ -163,23 +192,15 @@ const GuidesPage = () => {
         ))}
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
-        >
-          <PremiumGate feature={activeTab === 'fishing' ? 'Pesca y Caza' : 'Fotografía Lunar'}>
-            {activeTab === 'fishing' ? (
-              <FishingContent moonData={moonData} />
-            ) : (
-              <PhotoContent moonData={moonData} />
-            )}
-          </PremiumGate>
-        </motion.div>
-      </AnimatePresence>
+      {isPremium ? content : (
+        <PremiumGate feature={activeTab === 'fishing' ? 'Pesca y Caza' : 'Fotografía Lunar'}>
+          {activeTab === 'fishing' ? (
+            <FishingContent moonData={moonData} />
+          ) : (
+            <PhotoContent moonData={moonData} />
+          )}
+        </PremiumGate>
+      )}
     </div>
   );
 };
