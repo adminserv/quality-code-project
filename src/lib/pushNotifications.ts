@@ -93,19 +93,18 @@ export async function unsubscribeFromPush(userId: string): Promise<boolean> {
 
 export async function getVapidPublicKey(): Promise<string | null> {
   try {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    const res = await fetch(
-      `https://${projectId}.supabase.co/functions/v1/generate-vapid-keys`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-      }
-    );
-    const data = await res.json();
-    return data.applicationServerKey || null;
+    // Read from app_config table (public keys are readable by authenticated users)
+    const { data, error } = await supabase
+      .from('app_config')
+      .select('value')
+      .eq('key', 'vapid_public_key')
+      .maybeSingle();
+
+    if (error || !data) {
+      console.error('Failed to get VAPID key:', error);
+      return null;
+    }
+    return data.value;
   } catch {
     return null;
   }

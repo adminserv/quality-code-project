@@ -6,6 +6,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function getConfig(supabase: any) {
+  const { data, error } = await supabase
+    .from('app_config')
+    .select('key, value')
+    .in('key', ['vapid_public_key_jwk', 'vapid_private_key_jwk', 'vapid_subject']);
+
+  if (error) throw new Error(`Config error: ${error.message}`);
+  
+  const config: Record<string, string> = {};
+  for (const row of data || []) {
+    config[row.key] = row.value;
+  }
+  return config;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -14,20 +29,18 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const vapidPublicKeyJwk = Deno.env.get('VAPID_PUBLIC_KEY_JWK');
-    const vapidPrivateKeyJwk = Deno.env.get('VAPID_PRIVATE_KEY_JWK');
-    const vapidSubject = Deno.env.get('VAPID_SUBJECT') || 'mailto:lunaviva@app.com';
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    if (!vapidPublicKeyJwk || !vapidPrivateKeyJwk) {
+    const config = await getConfig(supabase);
+    
+    if (!config.vapid_public_key_jwk || !config.vapid_private_key_jwk) {
       return new Response(JSON.stringify({ error: 'VAPID keys not configured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Parse request body for event details
+    // Parse request body
     const body = await req.json().catch(() => ({}));
     const { eventType, title, message, icon } = body;
 
@@ -58,44 +71,39 @@ Deno.serve(async (req) => {
       .select('user_id')
       .eq(preferenceColumn, true);
 
-    if (prefError) {
-      throw new Error(`Failed to fetch preferences: ${prefError.message}`);
-    }
+    if (prefError) throw new Error(`Preferences error: ${prefError.message}`);
 
     if (!preferences || preferences.length === 0) {
-      return new Response(JSON.stringify({ sent: 0, message: 'No subscribers for this event type' }), {
+      return new Response(JSON.stringify({ sent: 0, message: 'No subscribers' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const userIds = preferences.map(p => p.user_id);
 
-    // Get push subscriptions for these users
     const { data: subscriptions, error: subError } = await supabase
       .from('push_subscriptions')
       .select('*')
       .in('user_id', userIds);
 
-    if (subError) {
-      throw new Error(`Failed to fetch subscriptions: ${subError.message}`);
-    }
+    if (subError) throw new Error(`Subscriptions error: ${subError.message}`);
 
     if (!subscriptions || subscriptions.length === 0) {
-      return new Response(JSON.stringify({ sent: 0, message: 'No push subscriptions found' }), {
+      return new Response(JSON.stringify({ sent: 0, message: 'No push subscriptions' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     // Import VAPID keys
-    const vapidKeys = await importVapidKeys(JSON.parse(vapidPublicKeyJwk), JSON.parse(vapidPrivateKeyJwk));
+    const publicJwk = JSON.parse(config.vapid_public_key_jwk);
+    const privateJwk = JSON.parse(config.vapid_private_key_jwk);
+    const vapidKeys = await importVapidKeys(publicJwk, privateJwk);
     
-    // Create application server
     const appServer = new ApplicationServer({
-      contactInformation: vapidSubject,
+      contactInformation: config.vapid_subject || 'mailto:lunaviva@app.com',
       keys: vapidKeys,
     });
 
-    // Send notifications
     const payload = JSON.stringify({
       title,
       body: message,
@@ -105,44 +113,32 @@ Deno.serve(async (req) => {
 
     let sent = 0;
     let failed = 0;
-    const staleSubscriptionIds: string[] = [];
+    const staleIds: string[] = [];
 
     for (const sub of subscriptions) {
       try {
-        const pushSubscription = {
+        const subscriber = await appServer.subscribe({
           endpoint: sub.endpoint,
-          keys: {
-            p256dh: sub.p256dh,
-            auth: sub.auth,
-          },
-        };
-
-        const subscriber = await appServer.subscribe(pushSubscription);
+          keys: { p256dh: sub.p256dh, auth: sub.auth },
+        });
         await subscriber.pushTextMessage(payload, { urgency: 'normal', ttl: 86400 });
         sent++;
-      } catch (err) {
+      } catch (err: any) {
         failed++;
-        // If subscription is gone (410), mark for removal
-        if (err.isGone?.()) {
-          staleSubscriptionIds.push(sub.id);
-        }
-        console.error(`Failed to send to ${sub.endpoint}:`, err.message);
+        if (err.isGone?.()) staleIds.push(sub.id);
+        console.error(`Push failed for ${sub.endpoint}:`, err.message);
       }
     }
 
-    // Clean up stale subscriptions
-    if (staleSubscriptionIds.length > 0) {
-      await supabase
-        .from('push_subscriptions')
-        .delete()
-        .in('id', staleSubscriptionIds);
+    if (staleIds.length > 0) {
+      await supabase.from('push_subscriptions').delete().in('id', staleIds);
     }
 
-    return new Response(JSON.stringify({ sent, failed, cleaned: staleSubscriptionIds.length }), {
+    return new Response(JSON.stringify({ sent, failed, cleaned: staleIds.length }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (error) {
-    console.error('Push notification error:', error);
+  } catch (error: any) {
+    console.error('Push error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
