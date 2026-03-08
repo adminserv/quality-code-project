@@ -8,6 +8,7 @@ import MoonStats from '@/components/MoonStats';
 import LunarEvents from '@/components/LunarEvents';
 import MoonFacts from '@/components/MoonFacts';
 import LunarCalendar from '@/components/LunarCalendar';
+
 const Index = () => {
   const { currentTime, moonData } = useMoonPhase();
   const [showAlert, setShowAlert] = useState(false);
@@ -44,7 +45,7 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 py-8 sm:py-12">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 py-8 sm:py-12 pb-24">
         {/* Header */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
@@ -54,7 +55,7 @@ const Index = () => {
           <div className="flex items-center justify-center gap-3 mb-2">
             <Moon className="w-8 h-8 text-primary" />
             <h1 className="text-3xl sm:text-5xl font-bold font-display text-glow">
-              Fases Lunares
+              Luna Viva
             </h1>
           </div>
           <p className="text-muted-foreground text-sm sm:text-base">
