@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.6839cad084f24e09a60a2aa06de599e6",
+  "appName": "Luna Viva",
+  "webDir": "dist",
+  "server": {
+    "url": "https://6839cad0-84f2-4e09-a60a-2aa06de599e6.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}
