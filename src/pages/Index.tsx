@@ -104,6 +104,11 @@ const Index = () => {
           <LunarEvents events={moonData.nextEvents} currentTime={currentTime} />
         </div>
 
+        {/* Astronomical Events */}
+        <div className="mb-6">
+          <AstronomicalEventsSection />
+        </div>
+
         {/* Facts */}
         <MoonFacts moonData={moonData} />
       </div>
