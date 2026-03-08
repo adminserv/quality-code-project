@@ -7,6 +7,7 @@ import StarField from '@/components/StarField';
 import MoonVisualization from '@/components/MoonVisualization';
 import MoonStats from '@/components/MoonStats';
 import LunarEvents from '@/components/LunarEvents';
+import AstronomicalEventsSection from '@/components/AstronomicalEventsSection';
 import MoonFacts from '@/components/MoonFacts';
 import LunarCalendar from '@/components/LunarCalendar';
 import ShareButton from '@/components/ShareButton';
@@ -101,6 +102,11 @@ const Index = () => {
         {/* Events */}
         <div className="mb-6">
           <LunarEvents events={moonData.nextEvents} currentTime={currentTime} />
+        </div>
+
+        {/* Astronomical Events */}
+        <div className="mb-6">
+          <AstronomicalEventsSection />
         </div>
 
         {/* Facts */}

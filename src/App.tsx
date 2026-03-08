@@ -16,6 +16,7 @@ import DiaryPage from "./pages/DiaryPage";
 import LoginPage from "./pages/LoginPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/login" element={<LoginPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/notificaciones" element={<NotificationsPage />} />
+              <Route path="/perfil" element={<ProfilePage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <BottomNav />
