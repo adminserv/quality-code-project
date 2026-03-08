@@ -13,6 +13,7 @@ import PremiumPage from "./pages/PremiumPage";
 import InstallPage from "./pages/InstallPage";
 import DiaryPage from "./pages/DiaryPage";
 import LoginPage from "./pages/LoginPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/premium" element={<PremiumPage />} />
               <Route path="/instalar" element={<InstallPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <BottomNav />
